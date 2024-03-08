@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CHATBOT</title>
+    <style>
+        body {
+          font-family: Arial, sans-serif;
+          margin: 0;
+          padding: 0;
+          background-color: #f4f4f4;
+          display: flex;
+          flex-direction: column;
+          min-height: 100vh;
+        }
+    
+        .container {
+          max-width: 600px;
+          margin: 50px auto;
+          padding: 20px;
+          background-color: #fff;
+          border-radius: 10px;
+          box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+          display: flex;
+          flex-direction: column;
+        }
+    
+        .chat-history {
+          flex: 1;
+          overflow-y: scroll;
+          padding-bottom: 10px;
+        }
+    
+        .message-container {
+          display: flex;
+          flex-direction: column;
+          margin-bottom: 10px;
+        }
+    
+        .message {
+          padding: 10px 15px;
+          border-radius: 10px;
+          max-width: 70%;
+        }
+    
+        .user-message {
+          align-self: flex-start;
+          background-color: #F3F3F3;
+          border: 1px solid #ccc;
+        }
+    
+        .bot-message {
+          align-self: flex-end;
+          background-color: #DCF8C6;
+        }
+    
+        .message p {
+          margin: 0;
+        }
+    
+        .input-container {
+          display: flex;
+          align-items: center;
+          margin-top: 20px;
+        }
+    
+        .input-container input[type="text"] {
+          flex: 1;
+          padding: 10px;
+          border: 1px solid #ccc;
+          border-radius: 5px;
+          font-size: 16px;
+          outline: none;
+        }
+    
+        .input-container button {
+          padding: 10px;
+          border: none;
+          background-color: transparent;
+          color: #4CAF50;
+          font-size: 16px;
+          cursor: pointer;
+          transition: color 0.3s ease;
+          border-radius: 5px;
+          display: flex;
+          align-items: center;
+        }
+    
+        .input-container button:hover {
+          color: #45a049;
+        }
+    
+        .icons {
+          width: 20px;
+          margin-right: 10px;
+        }
+    
+        #voiceInputButton {
+          background-color: transparent;
+          border: none;
+          cursor: pointer;
+          transition: opacity 0.3s ease;
+          margin-right: 10px;
+        }
+    
+        #voiceInputButton:hover {
+          opacity: 0.8;
+        }
+    
+        #errorContainer {
+          display: none;
+          margin-top: 10px;
+        }
+    
+        #errorContainer h2 {
+          color: #ff0000;
+          margin-bottom: 5px;
+        }
+    
+        #errorContainer p {
+          color: #ff0000;
+          margin: 0;
+        }
+
+        #submitBtn {
+          background-color: #4CAF50;
+          color: #fff;
+          transition: background-color 0.3s ease;
+        }
+
+        #submitBtn:hover {
+          background-color: #45a049;
+        }
+      </style>
+</head>
+<body>
+    <div class="container">
+        <h1 style="text-align: center;">Chatbot</h1>
+
+        <div class="chat-history" id="chatHistory">
+            <!-- Chat messages will be dynamically inserted here -->
+        </div>
+
+        <!-- Form for uploading PDF and asking question -->
+        <form id="pdfForm" action="/" method="post" enctype="multipart/form-data">
+            <div class="input-container">
+                <input type="file" name="pdf" accept="application/pdf" style="display: none;" id="fileInput">
+                <button type="button" id="pdfButton" style="display: flex; align-items: center;"><img src="data:image/png;base64,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" alt="PDF" class="icons" style="width: 20px; margin-right: 10px;"></button>
+                <input type="text" id="questionInput" name="question" placeholder="Type your question here">
+                <button id="voiceInputButton" type="button"><img src="data:image/png;base64,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" alt="Mic" class="icons"></button>
+                <button id="submitBtn" type="submit">Submit</button>
+            </div>
+        </form>
+
+        <!-- Display error message -->
+        <div id="errorContainer">
+            <h2>Error:</h2>
+            <p id="errorText"></p>
+        </div>
+    </div>
+
+    <!-- JavaScript for voice input and chat history -->
+    <script>
+        const voiceInputButton = document.getElementById('voiceInputButton');
+        const questionInput = document.getElementById('questionInput');
+        const chatHistory = document.getElementById('chatHistory');
+        const errorContainer = document.getElementById('errorContainer');
+        const pdfButton = document.getElementById('pdfButton');
+        const fileInput = document.getElementById('fileInput');
+
+        voiceInputButton.addEventListener('click', function() {
+            const recognition = new webkitSpeechRecognition();
+            recognition.lang = 'en-US';
+            recognition.start();
+            recognition.onresult = function(event) {
+                const transcript = event.results[0][0].transcript;
+                questionInput.value = transcript;
+            }
+        });
+
+        pdfButton.addEventListener('click', function() {
+            fileInput.click();
+        });
+
+        const pdfForm = document.getElementById('pdfForm');
+
+        pdfForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const formData = new FormData(pdfForm);
+            fetch('/', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.question && data.answer) {
+                    const messageContainer = document.createElement('div');
+                    messageContainer.classList.add('message-container');
+
+                    const userMessage = document.createElement('div');
+                    userMessage.classList.add('message', 'user-message');
+                    const userMessageText = document.createElement('p');
+                    userMessageText.textContent = data.question;
+                    userMessage.appendChild(userMessageText);
+
+                    const botMessage = document.createElement('div');
+                    botMessage.classList.add('message', 'bot-message');
+                    const botMessageText = document.createElement('p');
+                    botMessageText.textContent = data.answer;
+                    botMessage.appendChild(botMessageText);
+
+                    messageContainer.appendChild(userMessage);
+                    messageContainer.appendChild(botMessage);
+
+                    chatHistory.appendChild(messageContainer);
+
+                    errorContainer.style.display = 'none';
+                } else if (data.error) {
+                    errorText.textContent = data.error;
+                    errorContainer.style.display = 'block';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                errorText.textContent = 'An error occurred while processing the request.';
+                errorContainer.style.display = 'block';
+            });
+       
+        });
+    </script>
+</body>
+</html>
